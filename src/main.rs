@@ -1,4 +1,9 @@
-use k_board::{keyboard::Keyboard, keys::Keys};
+extern crate crossterm;
+
+use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+// use k_board::{keyboard::Keyboard, keys::Keys};
+use std::io::{self, stdout};
 
 struct Snake {
     body: Vec<(usize, usize)>,
@@ -22,7 +27,7 @@ fn main() {
     let mut board: Board = init();
 
     loop {
-        update(&mut board);
+        let _ = update(&mut board);
         draw(&board);
         // std::thread::sleep(one_second);
     }
@@ -47,10 +52,20 @@ fn init() -> Board {
     board
 }
 
-fn update(board: &mut Board) {
-    if let Some(key) = Keyboard::new().next() {
-        match key {
-            Keys::Up => {
+fn update(board: &mut Board) -> io::Result<()> {
+    enable_raw_mode()?;
+
+    // let mut stdout = stdout();
+
+    if let Event::Key(KeyEvent {
+        code,
+        modifiers,
+        kind,
+        state,
+    }) = crossterm::event::read()?
+    {
+        match code {
+            KeyCode::Up => {
                 if board.snake.head_y > 0 {
                     board
                         .snake
@@ -60,7 +75,7 @@ fn update(board: &mut Board) {
                     board.snake.head_y -= 1;
                 }
             }
-            Keys::Down => {
+            KeyCode::Down => {
                 if board.snake.head_y < board.heigth - 1 {
                     board
                         .snake
@@ -70,7 +85,7 @@ fn update(board: &mut Board) {
                     board.snake.head_y += 1;
                 }
             }
-            Keys::Left => {
+            KeyCode::Left => {
                 if board.snake.head_x > 0 {
                     board
                         .snake
@@ -80,7 +95,7 @@ fn update(board: &mut Board) {
                     board.snake.head_x -= 1;
                 }
             }
-            Keys::Right => {
+            KeyCode::Right => {
                 if board.snake.head_x < board.width - 1 {
                     board
                         .snake
@@ -90,9 +105,57 @@ fn update(board: &mut Board) {
                     board.snake.head_x += 1;
                 }
             }
+            KeyCode::Char('q') => {}
             _ => {}
         }
     }
+    disable_raw_mode()?;
+    Ok(())
+    // if let Some(key) = Keyboard::new().next() {
+    //     match key {
+    //         Keys::Up => {
+    //             if board.snake.head_y > 0 {
+    //                 board
+    //                     .snake
+    //                     .body
+    //                     .insert(0, (board.snake.head_x, board.snake.head_y));
+    //                 board.snake.body.pop();
+    //                 board.snake.head_y -= 1;
+    //             }
+    //         }
+    //         Keys::Down => {
+    //             if board.snake.head_y < board.heigth - 1 {
+    //                 board
+    //                     .snake
+    //                     .body
+    //                     .insert(0, (board.snake.head_x, board.snake.head_y));
+    //                 board.snake.body.pop();
+    //                 board.snake.head_y += 1;
+    //             }
+    //         }
+    //         Keys::Left => {
+    //             if board.snake.head_x > 0 {
+    //                 board
+    //                     .snake
+    //                     .body
+    //                     .insert(0, (board.snake.head_x, board.snake.head_y));
+    //                 board.snake.body.pop();
+    //                 board.snake.head_x -= 1;
+    //             }
+    //         }
+    //         Keys::Right => {
+    //             if board.snake.head_x < board.width - 1 {
+    //                 board
+    //                     .snake
+    //                     .body
+    //                     .insert(0, (board.snake.head_x, board.snake.head_y));
+    //                 board.snake.body.pop();
+    //                 board.snake.head_x += 1;
+    //             }
+    //         }
+    //         _ => {}
+    //     }
+    // }
 }
 
 fn draw(board: &Board) {
