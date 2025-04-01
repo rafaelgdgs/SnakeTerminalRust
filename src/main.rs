@@ -48,7 +48,7 @@ fn init() -> Board {
 fn update(board: &mut Board) {
     if let Some(key) = Keyboard::new().next() {
         match key {
-            Keys::Up => {
+            Keys::Up | Keys::Char('k') => {
                 if board.snake.head.1 > 0 {
                     board
                         .snake
@@ -58,7 +58,7 @@ fn update(board: &mut Board) {
                     board.snake.head.1 -= 1;
                 }
             }
-            Keys::Down => {
+            Keys::Down | Keys::Char('j') => {
                 if board.snake.head.1 < board.heigth - 1 {
                     board
                         .snake
@@ -68,7 +68,7 @@ fn update(board: &mut Board) {
                     board.snake.head.1 += 1;
                 }
             }
-            Keys::Left => {
+            Keys::Left | Keys::Char('h') => {
                 if board.snake.head.0 > 0 {
                     board
                         .snake
@@ -78,7 +78,7 @@ fn update(board: &mut Board) {
                     board.snake.head.0 -= 1;
                 }
             }
-            Keys::Right => {
+            Keys::Right | Keys::Char('l') => {
                 if board.snake.head.0 < board.width - 1 {
                     board
                         .snake
@@ -94,8 +94,8 @@ fn update(board: &mut Board) {
 }
 
 fn draw(board: &Board) {
-    clearscreen::clear().expect("failed to clear screen");
-    // std::process::Command::new("clear").status().unwrap();
+    // clearscreen::clear().expect("failed to clear screen");
+    std::process::Command::new("clear").status().unwrap();
 
     // Print title bar
     println!("Snake Game\n");
