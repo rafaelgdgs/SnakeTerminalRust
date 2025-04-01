@@ -1,9 +1,8 @@
 use k_board::{keyboard::Keyboard, keys::Keys};
 
 struct Snake {
-    body: Vec<(usize, usize)>,
-    head_x: usize,
-    head_y: usize,
+    body: Vec<(usize, usize)>, // body x, y
+    head: (usize, usize),
     head_char: char,
     body_char: char,
 }
@@ -30,8 +29,7 @@ fn main() {
 
 fn init() -> Board {
     let snake: Snake = Snake {
-        head_x: 10,
-        head_y: 10,
+        head: (10, 10),
         body: vec![(8, 10), (9, 10)],
         head_char: '@',
         body_char: '%',
@@ -51,43 +49,43 @@ fn update(board: &mut Board) {
     if let Some(key) = Keyboard::new().next() {
         match key {
             Keys::Up => {
-                if board.snake.head_y > 0 {
+                if board.snake.head.1 > 0 {
                     board
                         .snake
                         .body
-                        .insert(0, (board.snake.head_x, board.snake.head_y));
+                        .insert(0, board.snake.head);
                     board.snake.body.pop();
-                    board.snake.head_y -= 1;
+                    board.snake.head.1 -= 1;
                 }
             }
             Keys::Down => {
-                if board.snake.head_y < board.heigth - 1 {
+                if board.snake.head.1 < board.heigth - 1 {
                     board
                         .snake
                         .body
-                        .insert(0, (board.snake.head_x, board.snake.head_y));
+                        .insert(0, board.snake.head);
                     board.snake.body.pop();
-                    board.snake.head_y += 1;
+                    board.snake.head.1 += 1;
                 }
             }
             Keys::Left => {
-                if board.snake.head_x > 0 {
+                if board.snake.head.0 > 0 {
                     board
                         .snake
                         .body
-                        .insert(0, (board.snake.head_x, board.snake.head_y));
+                        .insert(0, board.snake.head);
                     board.snake.body.pop();
-                    board.snake.head_x -= 1;
+                    board.snake.head.0 -= 1;
                 }
             }
             Keys::Right => {
-                if board.snake.head_x < board.width - 1 {
+                if board.snake.head.0 < board.width - 1 {
                     board
                         .snake
                         .body
-                        .insert(0, (board.snake.head_x, board.snake.head_y));
+                        .insert(0, board.snake.head);
                     board.snake.body.pop();
-                    board.snake.head_x += 1;
+                    board.snake.head.0 += 1;
                 }
             }
             _ => {}
@@ -122,7 +120,7 @@ fn draw(board: &Board) {
 
         // Create the current line string, choosing between head, body or empty char
         for i in 0..board.width {
-            if line == board.snake.head_y && i == board.snake.head_x {
+            if line == board.snake.head.1 && i == board.snake.head.0 {
                 board_string.push(board.snake.head_char);
             } else if points_in_y.contains(&i) {
                 board_string.push(board.snake.body_char);
