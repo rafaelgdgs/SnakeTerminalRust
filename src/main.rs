@@ -3,7 +3,7 @@ use rand::seq::SliceRandom;
 
 struct Fruit {
     current: usize,
-    possibilities: Vec<(usize, usize)>,
+    possibilities: Vec<(usize, usize, usize)>,
 }
 
 struct Snake {
@@ -36,7 +36,8 @@ fn main() {
 
     while !game.over {
         update(&mut game);
-        draw(&game);
+        // draw(&game);
+        draw2(&game);
         // std::thread::sleep(one_second);
     }
 }
@@ -50,15 +51,15 @@ fn init() -> Game {
     };
     let board: Board = Board {
         // snake,
-        width: 50,
-        heigth: 30,
+        width: 14,
+        heigth: 14,
         padding: 5,
         board_vec: vec![0],
         vert_wall_char: '|',
         hor_wall_char: '~',
     };
-    let mut fruits: Vec<(usize, usize)> = (1..board.width)
-        .flat_map(|x| (1..board.heigth).map(move |y| (x, y)))
+    let mut fruits: Vec<(usize, usize, usize)> = (1..board.width)
+        .flat_map(|x| (1..board.heigth).map(move |y| (x, y, y * board.width + x)))
         .collect();
     fruits.shuffle(&mut rand::rng());
     let fruit: Fruit = Fruit {
@@ -155,11 +156,12 @@ fn snake_ate_fruit(game: &Game, (x, y): (usize, usize)) -> bool {
 }
 
 fn get_current_fruit_pos(game: &Game) -> (usize, usize) {
-    *game
+    let current = game
         .fruit
         .possibilities
         .get(game.fruit.current)
-        .expect("snake_ate_fruit current position should be within possibilities range.")
+        .expect("snake_ate_fruit current position should be within possibilities range.");
+    (current.0, current.1)
 }
 
 fn fruit_new_position(game: &mut Game) {
@@ -256,4 +258,102 @@ fn draw(game: &Game) {
             .to_string()
             .repeat(game.board.width + 1)
     );
+}
+
+#[derive(Clone, Debug)]
+enum Characteres {
+    Board,
+    SnakeBody,
+    SnakeHead,
+    Fruit,
+    Blank,
+}
+
+fn character_compressor(c1: &Characteres, c2: &Characteres) -> char {
+    match (c1, c2) {
+        (Characteres::Board, Characteres::Board) => '|',
+        (Characteres::Board, Characteres::SnakeBody) => '=',
+        (Characteres::Board, Characteres::SnakeHead) => ';',
+        (Characteres::Board, Characteres::Fruit) => '+',
+        (Characteres::Board, Characteres::Blank) => '^',
+        (Characteres::SnakeBody, Characteres::Board) => '6',
+        (Characteres::SnakeBody, Characteres::SnakeBody) => '8',
+        (Characteres::SnakeBody, Characteres::SnakeHead) => '!',
+        (Characteres::SnakeBody, Characteres::Fruit) => ':',
+        (Characteres::SnakeBody, Characteres::Blank) => '*',
+        (Characteres::SnakeHead, Characteres::Board) => '2',
+        (Characteres::SnakeHead, Characteres::SnakeBody) => '1',
+        (Characteres::SnakeHead, Characteres::SnakeHead) => 'E',
+        (Characteres::SnakeHead, Characteres::Fruit) => '?',
+        (Characteres::SnakeHead, Characteres::Blank) => '"',
+        (Characteres::Fruit, Characteres::Board) => 'L',
+        (Characteres::Fruit, Characteres::SnakeBody) => '2',
+        (Characteres::Fruit, Characteres::SnakeHead) => '3',
+        (Characteres::Fruit, Characteres::Fruit) => 'E',
+        (Characteres::Fruit, Characteres::Blank) => '"',
+        (Characteres::Blank, Characteres::Board) => '_',
+        (Characteres::Blank, Characteres::SnakeBody) => '~',
+        (Characteres::Blank, Characteres::SnakeHead) => ',',
+        (Characteres::Blank, Characteres::Fruit) => '.',
+        (Characteres::Blank, Characteres::Blank) => ' ',
+    }
+}
+
+fn draw2(game: &Game) {
+    std::process::Command::new("clear").status().unwrap();
+
+    // Print title bar
+    println!("Snake Game\n");
+
+    assert!(game.board.heigth % 2 == 0);
+
+    let mut canva = create_board_canva(&game.board);
+    insert_snake_canva(&mut canva, &game.snake, &game.board);
+    insert_fruit_canva(&mut canva, &game.fruit);
+
+    // println!("{:?}", canva);
+
+    for line in (0..game.board.heigth).step_by(2) {
+        for column in 0..game.board.width {
+            let index = line * game.board.width + column;
+
+            print!(
+                "{}",
+                character_compressor(&canva[index], &canva[index + game.board.width])
+            );
+        }
+        println!();
+    }
+}
+
+fn create_board_canva(board: &Board) -> Vec<Characteres> {
+    let mut vec: Vec<Characteres> = vec![Characteres::Blank; board.width * board.heigth];
+
+    for line in 0..board.heigth {
+        for column in 0..board.width {
+            let index = line * board.width + column;
+
+            if line == 0 || line == board.heigth - 1 || column == 0 || column == board.width - 1 {
+                vec[index] = Characteres::Board;
+            }
+        }
+    }
+
+    vec
+}
+
+fn position_to_index(board: &Board, (x, y): &(usize, usize)) -> usize {
+    y * board.width + x
+}
+
+fn insert_snake_canva(canva: &mut [Characteres], snake: &Snake, board: &Board) {
+    for item in &snake.body {
+        canva[position_to_index(board, item)] = Characteres::SnakeBody;
+    }
+    canva[position_to_index(board, &snake.head)] = Characteres::SnakeHead;
+}
+
+fn insert_fruit_canva(canva: &mut [Characteres], fruit: &Fruit) {
+    canva[fruit.possibilities[fruit.current].2] = Characteres::Fruit;
+    // canva[position_to_index(&game.board, &get_current_fruit_pos(&game))] = Characteres::Fruit;
 }
