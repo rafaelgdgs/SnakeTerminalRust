@@ -51,8 +51,8 @@ fn init() -> Game {
     };
     let board: Board = Board {
         // snake,
-        width: 14,
-        heigth: 14,
+        width: 50,
+        heigth: 30,
         padding: 5,
         board_vec: vec![0],
         vert_wall_char: '|',
